@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +42,6 @@ const DIFFICULTY_LEVELS = [
 
 export default function QuestionPaperForm() {
   const [formData, setFormData] = useState({
-    api_key: "",
     college_name: "",
     exam_type: "Test",
     total_marks: 100,
@@ -154,19 +152,6 @@ export default function QuestionPaperForm() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="api_key">API Key</Label>
-                <Input
-                  id="api_key"
-                  name="api_key"
-                  type="password"
-                  placeholder="Enter your Gemini API key"
-                  value={formData.api_key}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
                 <Label htmlFor="college_name">College Name</Label>
                 <Input
                   id="college_name"
@@ -275,30 +260,30 @@ export default function QuestionPaperForm() {
               </div>
             </CardContent>
           </Card>
-        </div>
 
-        {/* File Upload Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Upload Course Materials</CardTitle>
-            <CardDescription>
-              Upload PDF files containing the course materials to generate questions from
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FileUploader onFilesChange={handleFilesChange} />
-          </CardContent>
-        </Card>
+          {/* File Upload Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Upload Course Materials</CardTitle>
+              <CardDescription>
+                Upload PDF files containing the course materials to generate questions from
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FileUploader onFilesChange={handleFilesChange} />
+            </CardContent>
+          </Card>
 
-        {/* Submit Button */}
-        <div className="flex justify-center">
-          <Button
-            type="submit"
-            className="w-full md:w-auto px-8"
-            disabled={loading}
-          >
-            {loading ? "Generating..." : "Generate Question Paper"}
-          </Button>
+          {/* Submit Button */}
+          <div className="flex justify-center">
+            <Button
+              type="submit"
+              className="w-full md:w-auto px-8"
+              disabled={loading}
+            >
+              {loading ? "Generating..." : "Generate Question Paper"}
+            </Button>
+          </div>
         </div>
       </form>
 
