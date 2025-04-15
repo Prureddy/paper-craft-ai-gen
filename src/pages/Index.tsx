@@ -1,5 +1,7 @@
 
 import QuestionPaperForm from "@/components/QuestionPaperForm";
+import ApprovedPapersSearch from "@/components/ApprovedPapersSearch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
   return (
@@ -15,10 +17,22 @@ const Index = () => {
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
-          <section className="mb-10">
-            <h2 className="text-2xl font-semibold mb-6">Generate Your Question Paper</h2>
-            <QuestionPaperForm />
-          </section>
+          <Tabs defaultValue="generate" className="mb-10">
+            <TabsList className="grid w-full grid-cols-2 mb-8">
+              <TabsTrigger value="generate">Generate New Paper</TabsTrigger>
+              <TabsTrigger value="search">Find Approved Papers</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="generate">
+              <h2 className="text-2xl font-semibold mb-6">Generate Your Question Paper</h2>
+              <QuestionPaperForm />
+            </TabsContent>
+            
+            <TabsContent value="search">
+              <h2 className="text-2xl font-semibold mb-6">Approved Question Papers</h2>
+              <ApprovedPapersSearch />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
 

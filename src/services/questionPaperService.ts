@@ -1,5 +1,5 @@
 
-// Service to handle API interactions
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Generate a question paper by sending form data to the API
@@ -45,24 +45,79 @@ export const approveQuestionPaper = async (
     // Convert PDF blob to Base64 for storage
     const base64Data = await blobToBase64(pdfBlob);
     
-    // Send the data to your Supabase API endpoint
-    const response = await fetch('/approve_question_paper/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...paperData,
-        pdf_data: base64Data,
-      }),
-    });
+    // Insert record into Supabase
+    const { error } = await supabase
+      .from('approved_papers')
+      .insert({
+        college_name: paperData.college_name,
+        exam_type: paperData.exam_type,
+        total_marks: paperData.total_marks,
+        title: paperData.title,
+        question_difficulty: paperData.question_difficulty,
+        subject_name: paperData.subject_name,
+        course_code: paperData.course_code,
+        question_types: paperData.question_types, // This is sent as an array
+        created_at: paperData.created_at,
+        pdf_data: base64Data
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.detail || `Error: ${response.status} ${response.statusText}`);
+    if (error) {
+      console.error('Supabase error:', error);
+      throw new Error(`Failed to store question paper: ${error.message}`);
     }
   } catch (error) {
     console.error('Failed to approve question paper:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fetch approved question papers from Supabase
+ */
+export const fetchApprovedPapers = async (
+  filters?: {
+    subject_name?: string;
+    course_code?: string;
+    date?: string;
+  }
+): Promise<any[]> => {
+  try {
+    let query = supabase
+      .from('approved_papers')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    // Apply filters if provided
+    if (filters) {
+      if (filters.subject_name) {
+        query = query.eq('subject_name', filters.subject_name);
+      }
+      if (filters.course_code) {
+        query = query.eq('course_code', filters.course_code);
+      }
+      if (filters.date) {
+        // Filter by date (exact match for the date part)
+        const dateStart = new Date(filters.date);
+        dateStart.setUTCHours(0, 0, 0, 0);
+        
+        const dateEnd = new Date(filters.date);
+        dateEnd.setUTCHours(23, 59, 59, 999);
+        
+        query = query
+          .gte('created_at', dateStart.toISOString())
+          .lte('created_at', dateEnd.toISOString());
+      }
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      throw new Error(`Failed to fetch approved papers: ${error.message}`);
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Failed to fetch approved papers:', error);
     throw error;
   }
 };
@@ -83,3 +138,4 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
     reader.readAsDataURL(blob);
   });
 };
+
