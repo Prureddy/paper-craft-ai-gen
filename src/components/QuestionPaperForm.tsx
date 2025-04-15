@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,8 +19,9 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from 'sonner';
+import { Check } from "lucide-react";
 import FileUploader from "./FileUploader";
-import { generateQuestionPaper } from "../services/questionPaperService";
+import { generateQuestionPaper, approveQuestionPaper } from "../services/questionPaperService";
 
 const QUESTION_TYPES = [
   { id: "multipleChoice", label: "Multiple Choice" },
@@ -47,11 +49,14 @@ export default function QuestionPaperForm() {
     total_marks: 100,
     title: "",
     question_difficulty: "Mixed",
+    subject_name: "",
+    course_code: "",
   });
   
   const [selectedQuestionTypes, setSelectedQuestionTypes] = useState<string[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
+  const [approving, setApproving] = useState(false);
   const [generatedPdf, setGeneratedPdf] = useState<Blob | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,6 +145,34 @@ export default function QuestionPaperForm() {
     URL.revokeObjectURL(url);
   };
 
+  const handleApprove = async () => {
+    if (!generatedPdf) return;
+    
+    try {
+      setApproving(true);
+      
+      const paperData = {
+        college_name: formData.college_name,
+        exam_type: formData.exam_type,
+        total_marks: formData.total_marks,
+        title: formData.title,
+        question_difficulty: formData.question_difficulty,
+        subject_name: formData.subject_name,
+        course_code: formData.course_code,
+        question_types: selectedQuestionTypes.length > 0 ? selectedQuestionTypes : ["Mixed"],
+        created_at: new Date().toISOString(),
+      };
+      
+      await approveQuestionPaper(paperData, generatedPdf);
+      
+      toast.success("Question paper approved and stored successfully!");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to approve question paper");
+    } finally {
+      setApproving(false);
+    }
+  };
+
   return (
     <div className="w-full">
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -151,6 +184,30 @@ export default function QuestionPaperForm() {
               <CardDescription>Enter the basic information about your exam</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="subject_name">Subject Name</Label>
+                <Input
+                  id="subject_name"
+                  name="subject_name"
+                  placeholder="Enter subject name"
+                  value={formData.subject_name}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="course_code">Course Code</Label>
+                <Input
+                  id="course_code"
+                  name="course_code"
+                  placeholder="Enter course code"
+                  value={formData.course_code}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
               <div className="space-y-2">
                 <Label htmlFor="college_name">College Name</Label>
                 <Input
@@ -313,13 +370,24 @@ export default function QuestionPaperForm() {
                       Click the button below to download it.
                     </p>
                   </div>
-                  <Button
-                    onClick={handleDownloadPdf}
-                    size="lg"
-                    className="mt-4"
-                  >
-                    Download PDF
-                  </Button>
+                  <div className="flex flex-col sm:flex-row gap-4 mt-4">
+                    <Button
+                      onClick={handleDownloadPdf}
+                      size="lg"
+                    >
+                      Download PDF
+                    </Button>
+                    <Button
+                      onClick={handleApprove}
+                      variant="secondary"
+                      size="lg"
+                      disabled={approving}
+                      className="bg-green-500 hover:bg-green-600 text-white"
+                    >
+                      {approving ? "Approving..." : "Approve Paper"}
+                      {!approving && <Check className="ml-2 h-5 w-5" />}
+                    </Button>
+                  </div>
                 </div>
               )
             )}
