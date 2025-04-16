@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, supabaseCustom } from "@/integrations/supabase/client";
 
 /**
  * Generate a question paper by sending form data to the API
@@ -45,9 +45,8 @@ export const approveQuestionPaper = async (
     // Convert PDF blob to Base64 for storage
     const base64Data = await blobToBase64(pdfBlob);
     
-    // Insert record into Supabase using a raw insert query with any type 
-    // to bypass TypeScript errors since the types don't include the approved_papers table yet
-    const { error } = await supabase
+    // Use the untyped client to bypass type checking
+    const { error } = await supabaseCustom
       .from('approved_papers')
       .insert({
         college_name: paperData.college_name,
@@ -60,7 +59,7 @@ export const approveQuestionPaper = async (
         question_types: paperData.question_types,
         created_at: paperData.created_at,
         pdf_data: base64Data
-      } as any);
+      });
 
     if (error) {
       console.error('Supabase error:', error);
@@ -83,11 +82,11 @@ export const fetchApprovedPapers = async (
   }
 ): Promise<any[]> => {
   try {
-    // Using type assertion to bypass type checking
-    let query = supabase
+    // Use the untyped client to bypass type checking
+    let query = supabaseCustom
       .from('approved_papers')
       .select('*')
-      .order('created_at', { ascending: false }) as any;
+      .order('created_at', { ascending: false });
     
     // Apply filters if provided
     if (filters) {
