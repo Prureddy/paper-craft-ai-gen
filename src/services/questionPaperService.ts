@@ -45,8 +45,8 @@ export const approveQuestionPaper = async (
     // Convert PDF blob to Base64 for storage
     const base64Data = await blobToBase64(pdfBlob);
     
-    // Insert record into Supabase using a raw insert query
-    // This bypasses the type checking issues
+    // Insert record into Supabase using a raw insert query with any type 
+    // to bypass TypeScript errors since the types don't include the approved_papers table yet
     const { error } = await supabase
       .from('approved_papers')
       .insert({
@@ -60,7 +60,7 @@ export const approveQuestionPaper = async (
         question_types: paperData.question_types,
         created_at: paperData.created_at,
         pdf_data: base64Data
-      } as any); // Using type assertion to bypass type checking
+      } as any);
 
     if (error) {
       console.error('Supabase error:', error);
@@ -83,7 +83,7 @@ export const fetchApprovedPapers = async (
   }
 ): Promise<any[]> => {
   try {
-    // Using type assertion to bypass type checking for now
+    // Using type assertion to bypass type checking
     let query = supabase
       .from('approved_papers')
       .select('*')
@@ -140,4 +140,3 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
     reader.readAsDataURL(blob);
   });
 };
-
